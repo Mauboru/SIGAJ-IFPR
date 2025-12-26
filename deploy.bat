@@ -1,3 +1,12 @@
 @echo off
-echo Conectando-se ao servidor...
-ssh -t app-mempartestes-infotech@servidor.1nfotech.link "cd htdocs && cd mempartestes.infotech.app.br && git pull && npm run build"
+
+echo ========================================
+echo Deploy SIGAJ-IFPR
+echo ========================================
+echo.
+
+ssh root@212.85.19.3 "cd /home/tecnomaub-sigaj-ifpr/htdocs/sigaj-ifpr.tecnomaub.site && git pull && npm i --force && npm run build && rm -f public/hot && php artisan config:clear && php artisan view:clear && php artisan route:clear"
+
+echo.
+echo Deploy concluido!
+pause
