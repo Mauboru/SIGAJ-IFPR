@@ -1,0 +1,3 @@
+@echo off
+echo Conectando-se ao servidor...
+ssh -t app-mempartestes-infotech@servidor.1nfotech.link "cd htdocs && cd mempartestes.infotech.app.br && git pull && npm run build"
