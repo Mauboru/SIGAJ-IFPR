@@ -365,6 +365,7 @@
     "carregarClientes": true,
     "isFormDirty": true,
     "setFormDirty": true,
-    "toggleFormDirty": true
+    "toggleFormDirty": true,
+    "useTheme": true
   }
 }

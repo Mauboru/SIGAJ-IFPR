@@ -1,4 +1,6 @@
 import '../css/app.css'
+// Importar composable de tema para inicializar antes do app
+import './composables/useTheme'
 import { createApp } from 'vue'
 import App from './App.vue'
 import router from './router'

@@ -25,3 +25,4 @@ class UpdateAtividadeRequest extends FormRequest
     }
 }
 
+

@@ -23,3 +23,4 @@ class UpdateAulaRequest extends FormRequest
     }
 }
 
+

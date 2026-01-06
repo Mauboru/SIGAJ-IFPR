@@ -25,3 +25,4 @@ class StoreAtividadeRequest extends FormRequest
     }
 }
 
+
