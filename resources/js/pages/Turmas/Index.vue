@@ -14,7 +14,12 @@
                     class="bg-white shadow rounded-lg p-6"
                 >
                     <h3 class="text-lg font-semibold text-gray-900 mb-2">{{ turma.nome }}</h3>
-                    <p class="text-sm text-gray-600 mb-2">{{ turma.materia?.nome }}</p>
+                    <p class="text-sm text-gray-600 mb-2">
+                        <span v-if="turma.materias && turma.materias.length > 0">
+                            {{ turma.materias.map(m => m.nome).join(', ') }}
+                        </span>
+                        <span v-else class="text-gray-400">Sem matérias</span>
+                    </p>
                     <p class="text-xs text-gray-500 mb-4">{{ turma.ano }} - {{ turma.semestre }}</p>
                     <div class="flex justify-between items-center">
                         <span class="text-xs text-gray-500">{{ turma.alunos?.length || 0 }} alunos</span>

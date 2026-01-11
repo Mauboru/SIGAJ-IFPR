@@ -12,7 +12,7 @@ class TurmaController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Turma::with(['professor', 'materia', 'alunos']);
+        $query = Turma::with(['professor', 'materias', 'alunos']);
 
         if ($request->user()->isProfessor()) {
             $query->where('professor_id', $request->user()->id);
@@ -33,14 +33,14 @@ class TurmaController extends Controller
 
         $turma = Turma::create($data);
 
-        return response()->json($turma->load(['professor', 'materia']), 201);
+        return response()->json($turma->load(['professor', 'materias']), 201);
     }
 
     public function show(Request $request, Turma $turma)
     {
         $this->authorize('view', $turma);
 
-        return response()->json($turma->load(['professor', 'materia', 'alunos']));
+        return response()->json($turma->load(['professor', 'materias', 'alunos']));
     }
 
     public function update(UpdateTurmaRequest $request, Turma $turma)
@@ -49,7 +49,7 @@ class TurmaController extends Controller
 
         $turma->update($request->validated());
 
-        return response()->json($turma->load(['professor', 'materia']));
+        return response()->json($turma->load(['professor', 'materias']));
     }
 
     public function destroy(Request $request, Turma $turma)
@@ -93,5 +93,7 @@ class TurmaController extends Controller
         return response()->json(['message' => 'Aluno removido da turma com sucesso']);
     }
 }
+
+
 
 

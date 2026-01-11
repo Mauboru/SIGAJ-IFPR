@@ -14,7 +14,6 @@ class Materia extends Model
         'nome',
         'descricao',
         'professor_id',
-        'plano_ensino_path',
     ];
 
     // Relacionamentos
@@ -25,7 +24,7 @@ class Materia extends Model
 
     public function turmas()
     {
-        return $this->hasMany(Turma::class);
+        return $this->belongsToMany(Turma::class, 'materia_turma');
     }
 
     public function aulas()

@@ -24,3 +24,5 @@ class StoreAulaRequest extends FormRequest
 }
 
 
+
+

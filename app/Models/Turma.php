@@ -23,9 +23,16 @@ class Turma extends Model
         return $this->belongsTo(User::class, 'professor_id');
     }
 
-    public function materia()
+    public function materias()
     {
-        return $this->belongsTo(Materia::class);
+        return $this->belongsToMany(Materia::class, 'materia_turma');
+    }
+
+    // Manter compatibilidade com código existente - retorna a primeira matéria
+    // Não deve ser usado em eager loading, use 'materias' ao invés
+    public function getMateriaAttribute()
+    {
+        return $this->materias()->first();
     }
 
     public function alunos()

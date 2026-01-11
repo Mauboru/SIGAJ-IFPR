@@ -15,8 +15,11 @@ class MateriaPolicy
         }
 
         // Aluno vê matérias das turmas que está matriculado
+        // Verifica se o aluno está em alguma turma que tem esta matéria
         return $user->turmasComoAluno()
-            ->where('materia_id', $materia->id)
+            ->whereHas('materias', function ($query) use ($materia) {
+                $query->where('materias.id', $materia->id);
+            })
             ->exists();
     }
 
@@ -38,5 +41,7 @@ class MateriaPolicy
         return $user->isProfessor() && $materia->professor_id === $user->id;
     }
 }
+
+
 
 
