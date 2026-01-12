@@ -306,22 +306,22 @@
                 <div v-if="selectedMateria" class="space-y-6">
                     <!-- Informações Gerais -->
                     <div>
-                        <h2 class="text-2xl font-bold text-gray-900 mb-2">{{ selectedMateria.nome }}</h2>
-                        <p class="text-sm text-gray-500 mb-4">
-                            Professor: <span class="font-medium">{{ selectedMateria.professor?.name }}</span>
+                        <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">{{ selectedMateria.nome }}</h2>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                            Professor: <span class="font-medium text-gray-700 dark:text-gray-300">{{ selectedMateria.professor?.name }}</span>
                         </p>
-                        <div v-if="selectedMateria.descricao" class="prose max-w-none" v-html="selectedMateria.descricao"></div>
-                        <div v-else class="text-sm text-gray-500 italic">Sem descrição</div>
+                        <div v-if="selectedMateria.descricao" class="prose max-w-none dark:prose-invert" v-html="selectedMateria.descricao"></div>
+                        <div v-else class="text-sm text-gray-500 dark:text-gray-400 italic">Sem descrição</div>
                     </div>
 
                     <!-- Turmas -->
                     <div v-if="selectedMateria.turmas && selectedMateria.turmas.length > 0">
-                        <h3 class="text-lg font-semibold text-gray-900 mb-3">Turmas</h3>
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-3">Turmas</h3>
                         <div class="flex flex-wrap gap-2">
                             <span
                                 v-for="turma in selectedMateria.turmas"
                                 :key="turma.id"
-                                class="px-3 py-1 bg-indigo-100 text-indigo-800 rounded-full text-sm"
+                                class="px-3 py-1 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-800 dark:text-indigo-300 rounded-full text-sm"
                             >
                                 {{ turma.nome }} - {{ turma.ano }}/{{ turma.semestre }}
                             </span>
@@ -331,10 +331,10 @@
                     <!-- Aulas do Plano de Ensino -->
                     <div>
                         <div class="flex justify-between items-center mb-4">
-                            <h3 class="text-lg font-semibold text-gray-900">
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
                                 Aulas do Plano de Ensino
                             </h3>
-                            <span class="text-sm text-gray-500">
+                            <span class="text-sm text-gray-500 dark:text-gray-400">
                                 Total: {{ selectedMateria.aulas?.length || 0 }} aula{{ (selectedMateria.aulas?.length || 0) !== 1 ? 's' : '' }}
                             </span>
                         </div>
@@ -373,6 +373,56 @@
                         <div v-else class="text-center py-8 text-gray-500 text-sm border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg">
                             Nenhuma aula cadastrada
                         </div>
+                    </div>
+
+                    <!-- Arquivos PDF -->
+                    <div v-if="selectedMateria.arquivos && selectedMateria.arquivos.length > 0">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                                Arquivos PDF
+                            </h3>
+                            <span class="text-sm text-gray-500 dark:text-gray-400">
+                                Total: {{ selectedMateria.arquivos.length }} arquivo{{ selectedMateria.arquivos.length !== 1 ? 's' : '' }}
+                            </span>
+                        </div>
+                        
+                        <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+                            <div class="divide-y divide-gray-200 dark:divide-gray-700">
+                                <div
+                                    v-for="arquivo in selectedMateria.arquivos"
+                                    :key="arquivo.id"
+                                    class="p-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                                >
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center space-x-3 flex-1 min-w-0">
+                                            <svg class="w-8 h-8 text-red-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                            </svg>
+                                            <div class="flex-1 min-w-0">
+                                                <p class="text-sm font-medium text-gray-900 dark:text-white truncate">
+                                                    {{ arquivo.nome_original }}
+                                                </p>
+                                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1" v-if="arquivo.tamanho">
+                                                    {{ formatarTamanho(arquivo.tamanho) }}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <button
+                                            @click="downloadArquivo(arquivo)"
+                                            class="ml-4 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white text-sm font-medium rounded-md transition-colors flex items-center space-x-2"
+                                        >
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                            </svg>
+                                            <span>Baixar</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div v-else class="text-center py-8 text-gray-500 dark:text-gray-400 text-sm border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg">
+                        Nenhum arquivo PDF cadastrado
                     </div>
                 </div>
             </Modal>
@@ -569,6 +619,36 @@ const viewAula = (aula) => {
     console.log('Visualizar aula:', aula);
 };
 
+const formatarTamanho = (bytes) => {
+    if (!bytes) return '';
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+};
+
+const downloadArquivo = async (arquivo) => {
+    try {
+        const response = await axios.get(`/arquivos/${arquivo.id}/download`, {
+            responseType: 'blob'
+        });
+        
+        // Criar link temporário para download
+        const url = window.URL.createObjectURL(new Blob([response.data]));
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', arquivo.nome_original);
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.URL.revokeObjectURL(url);
+    } catch (error) {
+        console.error('Erro ao baixar arquivo:', error);
+        alert('Erro ao baixar arquivo: ' + (error.response?.data?.message || error.message));
+    }
+};
+
 const handlePlanoChange = (event) => {
     planoFile.value = event.target.files[0];
 };
@@ -599,14 +679,13 @@ const saveMateria = async () => {
         
         // Adicionar arquivos extras
         if (form.value.arquivos_extras && form.value.arquivos_extras.length > 0) {
-            form.value.arquivos_extras.forEach((arquivo, index) => {
-                formData.append(`arquivos_extras[${index}]`, arquivo);
+            form.value.arquivos_extras.forEach((arquivo) => {
+                formData.append('arquivos_extras[]', arquivo);
             });
         }
 
         // Para FormData, não definir Content-Type - o navegador faz isso automaticamente com boundary
         if (editingMateria.value) {
-            // Para edição, ainda usar o método antigo (aulas serão gerenciadas separadamente)
             await axios.put(`/materias/${editingMateria.value.id}`, formData);
         } else {
             await axios.post('/materias', formData);

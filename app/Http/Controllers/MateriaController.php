@@ -15,7 +15,7 @@ class MateriaController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Materia::with(['professor', 'aulas', 'turmas']);
+        $query = Materia::with(['professor', 'aulas', 'turmas', 'arquivos']);
 
         if ($request->user()->isProfessor()) {
             $query->where('professor_id', $request->user()->id);
@@ -82,16 +82,24 @@ class MateriaController extends Controller
 
             // Upload de arquivos extras (PDFs) se fornecidos
             if ($request->hasFile('arquivos_extras')) {
-                foreach ($request->file('arquivos_extras') as $arquivo) {
-                    $path = $arquivo->store('materias/' . $materia->id . '/arquivos_extras', 'public');
-                    
-                    $materia->arquivos()->create([
-                        'nome_original' => $arquivo->getClientOriginalName(),
-                        'caminho' => $path,
-                        'tipo' => 'arquivo_extra',
-                        'mime_type' => $arquivo->getMimeType(),
-                        'tamanho' => $arquivo->getSize(),
-                    ]);
+                $arquivos = $request->file('arquivos_extras');
+                // Se for um único arquivo, converter para array
+                if (!is_array($arquivos)) {
+                    $arquivos = [$arquivos];
+                }
+                
+                foreach ($arquivos as $arquivo) {
+                    if ($arquivo && $arquivo->isValid()) {
+                        $path = $arquivo->store('materias/' . $materia->id . '/arquivos_extras', 'public');
+                        
+                        $materia->arquivos()->create([
+                            'nome_original' => $arquivo->getClientOriginalName(),
+                            'caminho' => $path,
+                            'tipo' => 'arquivo_extra',
+                            'mime_type' => $arquivo->getMimeType(),
+                            'tamanho' => $arquivo->getSize(),
+                        ]);
+                    }
                 }
             }
 
@@ -156,16 +164,24 @@ class MateriaController extends Controller
 
         // Upload de arquivos extras (PDFs) se fornecidos
         if ($request->hasFile('arquivos_extras')) {
-            foreach ($request->file('arquivos_extras') as $arquivo) {
-                $path = $arquivo->store('materias/' . $materia->id . '/arquivos_extras', 'public');
-                
-                $materia->arquivos()->create([
-                    'nome_original' => $arquivo->getClientOriginalName(),
-                    'caminho' => $path,
-                    'tipo' => 'arquivo_extra',
-                    'mime_type' => $arquivo->getMimeType(),
-                    'tamanho' => $arquivo->getSize(),
-                ]);
+            $arquivos = $request->file('arquivos_extras');
+            // Se for um único arquivo, converter para array
+            if (!is_array($arquivos)) {
+                $arquivos = [$arquivos];
+            }
+            
+            foreach ($arquivos as $arquivo) {
+                if ($arquivo && $arquivo->isValid()) {
+                    $path = $arquivo->store('materias/' . $materia->id . '/arquivos_extras', 'public');
+                    
+                    $materia->arquivos()->create([
+                        'nome_original' => $arquivo->getClientOriginalName(),
+                        'caminho' => $path,
+                        'tipo' => 'arquivo_extra',
+                        'mime_type' => $arquivo->getMimeType(),
+                        'tamanho' => $arquivo->getSize(),
+                    ]);
+                }
             }
         }
 

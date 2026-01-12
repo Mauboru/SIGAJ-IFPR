@@ -298,16 +298,19 @@ const saveArquivo = async () => {
     formData.append('arquivo', arquivoFile.value);
 
     try {
-        await axios.post(`/aulas/${selectedAula.value.id}/arquivos`, formData, {
-            headers: { 'Content-Type': 'multipart/form-data' }
-        });
+        await axios.post(`/aulas/${selectedAula.value.id}/arquivos`, formData);
         await loadAulas();
         closeArquivoModal();
     } catch (error) {
+        console.error('Erro ao fazer upload:', error);
         if (error.response?.status === 422) {
-            alert(error.response.data.message || 'Erro ao fazer upload do arquivo');
+            const errors = error.response.data.errors || {};
+            const errorMessage = errors.arquivo ? errors.arquivo[0] : error.response.data.message || 'Erro ao fazer upload do arquivo';
+            alert(errorMessage);
+        } else if (error.response?.status === 403) {
+            alert('Você não tem permissão para fazer upload de arquivos nesta aula');
         } else {
-            alert('Erro ao fazer upload do arquivo');
+            alert('Erro ao fazer upload do arquivo: ' + (error.response?.data?.message || error.message));
         }
     } finally {
         loadingArquivo.value = false;

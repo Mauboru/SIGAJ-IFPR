@@ -10,7 +10,7 @@ import axios from 'axios';
 // Configurar axios para usar o token de autenticação
 axios.defaults.baseURL = '/api';
 axios.defaults.headers.common['Accept'] = 'application/json';
-axios.defaults.headers.common['Content-Type'] = 'application/json';
+// Não definir Content-Type padrão - será definido automaticamente pelo navegador (FormData) ou pelo axios (JSON)
 
 // Inicializar autenticação
 store.initAuth();

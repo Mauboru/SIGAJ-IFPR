@@ -76,15 +76,23 @@ class AulaController extends Controller
             'arquivo' => 'required|file|mimes:pdf|max:10240',
         ]);
 
-        $caminho = $request->file('arquivo')->store('aulas/' . $aula->id . '/arquivos', 'public');
+        $arquivoFile = $request->file('arquivo');
+        
+        if (!$arquivoFile || !$arquivoFile->isValid()) {
+            return response()->json(['message' => 'Arquivo inválido'], 422);
+        }
+
+        $caminho = $arquivoFile->store('aulas/' . $aula->id . '/arquivos', 'public');
 
         $arquivo = $aula->arquivos()->create([
-            'nome_original' => $request->file('arquivo')->getClientOriginalName(),
+            'nome_original' => $arquivoFile->getClientOriginalName(),
             'caminho' => $caminho,
             'tipo' => 'material_aula',
+            'mime_type' => $arquivoFile->getMimeType(),
+            'tamanho' => $arquivoFile->getSize(),
         ]);
 
-        return response()->json($arquivo, 201);
+        return response()->json($arquivo->load('arquivoable'), 201);
     }
 }
 
