@@ -426,6 +426,148 @@
                     </div>
                 </div>
             </Modal>
+
+            <!-- Modal de Detalhes da Aula -->
+            <Modal :show="showAulaDetailsModal" title="Detalhes da Aula" @close="closeAulaModal" size="large">
+                <div v-if="selectedAulaDetalhes" class="space-y-6">
+                    <!-- Informações Gerais da Aula -->
+                    <div class="bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-lg p-6">
+                        <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">{{ selectedAulaDetalhes.titulo }}</h2>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                            <div>
+                                <p class="text-sm text-gray-500 dark:text-gray-400">Data</p>
+                                <p class="text-base font-medium text-gray-900 dark:text-white">{{ formatarData(selectedAulaDetalhes.data) }}</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500 dark:text-gray-400">Turma</p>
+                                <p class="text-base font-medium text-gray-900 dark:text-white">{{ selectedAulaDetalhes.turma?.nome }}</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500 dark:text-gray-400">Matéria</p>
+                                <p class="text-base font-medium text-gray-900 dark:text-white">{{ selectedAulaDetalhes.materia?.nome }}</p>
+                            </div>
+                        </div>
+                        <div v-if="selectedAulaDetalhes.descricao" class="mt-4">
+                            <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">Descrição</p>
+                            <div class="prose max-w-none dark:prose-invert text-sm" v-html="selectedAulaDetalhes.descricao"></div>
+                        </div>
+                    </div>
+
+                    <!-- Seção de Chamada (apenas para professores) -->
+                    <div v-if="user?.role === 'professor' && selectedAulaDetalhes.turma?.alunos" class="border-t pt-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                                Chamada de Presença
+                            </h3>
+                            <Button 
+                                @click="salvarChamada" 
+                                :loading="salvandoChamada"
+                            >
+                                Salvar Chamada
+                            </Button>
+                        </div>
+                        
+                        <div v-if="presencas.length > 0" class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+                            <div class="divide-y divide-gray-200 dark:divide-gray-700">
+                                <div
+                                    v-for="(presenca, index) in presencas"
+                                    :key="presenca.aluno_id || presenca.aluno?.id || index"
+                                    class="p-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                                >
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center space-x-3 flex-1">
+                                            <div class="flex-shrink-0">
+                                                <input
+                                                    type="checkbox"
+                                                    :checked="presenca.presente"
+                                                    @change="togglePresenca(index)"
+                                                    class="w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700"
+                                                />
+                                            </div>
+                                            <div class="flex-1 min-w-0">
+                                                <p class="text-sm font-medium text-gray-900 dark:text-white">
+                                                    {{ presenca.aluno?.name || 'Aluno' }}
+                                                </p>
+                                                <p class="text-xs text-gray-500 dark:text-gray-400" v-if="presenca.aluno?.email">
+                                                    {{ presenca.aluno.email }}
+                                                </p>
+                                            </div>
+                                            <div class="flex-shrink-0">
+                                                <span
+                                                    :class="presenca.presente 
+                                                        ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' 
+                                                        : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'"
+                                                    class="px-2 py-1 text-xs font-medium rounded-full"
+                                                >
+                                                    {{ presenca.presente ? 'Presente' : 'Faltou' }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div v-if="presenca.observacoes" class="mt-2 ml-8">
+                                        <p class="text-xs text-gray-600 dark:text-gray-400 italic">
+                                            Obs: {{ presenca.observacoes }}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div v-else class="text-center py-8 text-gray-500 text-sm border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg">
+                            Nenhum aluno cadastrado nesta turma
+                        </div>
+                    </div>
+
+                    <!-- Documentos de Apoio -->
+                    <div class="border-t pt-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                                Documentos de Apoio
+                            </h3>
+                            <span class="text-sm text-gray-500 dark:text-gray-400" v-if="selectedAulaDetalhes.arquivos">
+                                Total: {{ selectedAulaDetalhes.arquivos.length }} arquivo{{ selectedAulaDetalhes.arquivos.length !== 1 ? 's' : '' }}
+                            </span>
+                        </div>
+                        
+                        <div v-if="selectedAulaDetalhes.arquivos && selectedAulaDetalhes.arquivos.length > 0" class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+                            <div class="divide-y divide-gray-200 dark:divide-gray-700">
+                                <div
+                                    v-for="arquivo in selectedAula.arquivos"
+                                    :key="arquivo.id"
+                                    class="p-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                                >
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center space-x-3 flex-1 min-w-0">
+                                            <svg class="w-8 h-8 text-red-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                            </svg>
+                                            <div class="flex-1 min-w-0">
+                                                <p class="text-sm font-medium text-gray-900 dark:text-white truncate">
+                                                    {{ arquivo.nome_original }}
+                                                </p>
+                                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1" v-if="arquivo.tamanho">
+                                                    {{ formatarTamanho(arquivo.tamanho) }}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <button
+                                            @click="downloadArquivoAula(arquivo)"
+                                            class="ml-4 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white text-sm font-medium rounded-md transition-colors flex items-center space-x-2"
+                                        >
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                            </svg>
+                                            <span>Baixar</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div v-else class="text-center py-8 text-gray-500 dark:text-gray-400 text-sm border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg">
+                            Nenhum documento de apoio cadastrado
+                        </div>
+                    </div>
+                </div>
+            </Modal>
         </div>
 </template>
 
@@ -614,9 +756,90 @@ const sortedAulas = computed(() => {
     });
 });
 
-const viewAula = (aula) => {
-    // Por enquanto apenas um placeholder, pode ser implementado depois
-    console.log('Visualizar aula:', aula);
+const showAulaDetailsModal = ref(false);
+const selectedAulaDetalhes = ref(null);
+const presencas = ref([]);
+const loadingChamada = ref(false);
+const salvandoChamada = ref(false);
+
+const viewAula = async (aula) => {
+    try {
+        const response = await axios.get(`/aulas/${aula.id}`);
+        selectedAulaDetalhes.value = response.data;
+        presencas.value = response.data.presencas || [];
+        
+        // Se não houver presenças registradas, criar lista com todos os alunos da turma
+        if (presencas.value.length === 0 && selectedAulaDetalhes.value.turma?.alunos) {
+            presencas.value = selectedAulaDetalhes.value.turma.alunos.map(aluno => ({
+                aluno_id: aluno.id,
+                aluno: aluno,
+                presente: false,
+                observacoes: null
+            }));
+        }
+        
+        showAulaDetailsModal.value = true;
+    } catch (error) {
+        console.error('Erro ao carregar detalhes da aula:', error);
+        alert('Erro ao carregar detalhes da aula');
+    }
+};
+
+const closeAulaModal = () => {
+    showAulaDetailsModal.value = false;
+    selectedAulaDetalhes.value = null;
+    presencas.value = [];
+};
+
+const togglePresenca = (index) => {
+    if (presencas.value[index]) {
+        presencas.value[index].presente = !presencas.value[index].presente;
+    }
+};
+
+const salvarChamada = async () => {
+    if (!selectedAulaDetalhes.value || !user.value?.isProfessor()) return;
+    
+    salvandoChamada.value = true;
+    try {
+        const presencasData = presencas.value.map(p => ({
+            aluno_id: p.aluno_id || p.aluno?.id,
+            presente: p.presente || false,
+            observacoes: p.observacoes || null
+        }));
+        
+        const response = await axios.post(`/aulas/${selectedAulaDetalhes.value.id}/chamada`, {
+            presencas: presencasData
+        });
+        
+        presencas.value = response.data.presencas || presencas.value;
+        alert('Chamada registrada com sucesso!');
+    } catch (error) {
+        console.error('Erro ao salvar chamada:', error);
+        alert('Erro ao salvar chamada: ' + (error.response?.data?.message || error.message));
+    } finally {
+        salvandoChamada.value = false;
+    }
+};
+
+const downloadArquivoAula = async (arquivo) => {
+    try {
+        const response = await axios.get(`/arquivos/${arquivo.id}/download`, {
+            responseType: 'blob'
+        });
+        
+        const url = window.URL.createObjectURL(new Blob([response.data]));
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', arquivo.nome_original);
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.URL.revokeObjectURL(url);
+    } catch (error) {
+        console.error('Erro ao baixar arquivo:', error);
+        alert('Erro ao baixar arquivo: ' + (error.response?.data?.message || error.message));
+    }
 };
 
 const formatarTamanho = (bytes) => {

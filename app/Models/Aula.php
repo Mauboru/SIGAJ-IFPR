@@ -42,4 +42,9 @@ class Aula extends Model
     {
         return $this->morphMany(Arquivo::class, 'arquivoable');
     }
+
+    public function presencas()
+    {
+        return $this->hasMany(Presenca::class);
+    }
 }

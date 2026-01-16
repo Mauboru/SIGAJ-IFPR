@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Aula;
+use App\Models\Presenca;
 use Illuminate\Http\Request;
 use App\Http\Requests\Aula\StoreAulaRequest;
 use App\Http\Requests\Aula\UpdateAulaRequest;
@@ -39,9 +40,27 @@ class AulaController extends Controller
 
     public function show(Request $request, Aula $aula)
     {
-        $this->authorize('view', $aula);
+        // Carregar relacionamentos necessários para verificação
+        $aula->load(['turma.alunos', 'materia']);
+        
+        // Verificar permissão básica
+        if ($request->user()->isProfessor()) {
+            if ($aula->turma->professor_id !== $request->user()->id) {
+                return response()->json(['message' => 'Não autorizado'], 403);
+            }
+        } else {
+            // Aluno só pode ver se estiver matriculado na turma
+            if (!$aula->turma->alunos->contains($request->user()->id)) {
+                return response()->json(['message' => 'Não autorizado'], 403);
+            }
+        }
 
-        return response()->json($aula->load(['turma', 'materia', 'arquivos']));
+        return response()->json($aula->load([
+            'turma.alunos',
+            'materia',
+            'arquivos',
+            'presencas.aluno'
+        ]));
     }
 
     public function update(UpdateAulaRequest $request, Aula $aula)
@@ -93,6 +112,61 @@ class AulaController extends Controller
         ]);
 
         return response()->json($arquivo->load('arquivoable'), 201);
+    }
+
+    public function registrarChamada(Request $request, Aula $aula)
+    {
+        // Carregar turma para verificação
+        $aula->load('turma');
+        
+        // Apenas professor pode registrar chamada
+        if (!$request->user()->isProfessor() || $aula->turma->professor_id !== $request->user()->id) {
+            return response()->json(['message' => 'Não autorizado'], 403);
+        }
+
+        $request->validate([
+            'presencas' => 'required|array',
+            'presencas.*.aluno_id' => 'required|exists:users,id',
+            'presencas.*.presente' => 'required|boolean',
+            'presencas.*.observacoes' => 'nullable|string',
+        ]);
+
+        foreach ($request->presencas as $presencaData) {
+            Presenca::updateOrCreate(
+                [
+                    'aula_id' => $aula->id,
+                    'aluno_id' => $presencaData['aluno_id'],
+                ],
+                [
+                    'presente' => $presencaData['presente'],
+                    'observacoes' => $presencaData['observacoes'] ?? null,
+                ]
+            );
+        }
+
+        return response()->json([
+            'message' => 'Chamada registrada com sucesso',
+            'presencas' => $aula->presencas()->with('aluno')->get()
+        ]);
+    }
+
+    public function obterChamada(Request $request, Aula $aula)
+    {
+        // Carregar relacionamentos necessários para verificação
+        $aula->load('turma.alunos');
+        
+        // Verificar permissão
+        if ($request->user()->isProfessor()) {
+            if ($aula->turma->professor_id !== $request->user()->id) {
+                return response()->json(['message' => 'Não autorizado'], 403);
+            }
+        } else {
+            if (!$aula->turma->alunos->contains($request->user()->id)) {
+                return response()->json(['message' => 'Não autorizado'], 403);
+            }
+        }
+
+        return response()->json($aula->presencas()->with('aluno')->get());
     }
 }
 
