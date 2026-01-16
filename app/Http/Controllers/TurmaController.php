@@ -17,13 +17,24 @@ class TurmaController extends Controller
         if ($request->user()->isProfessor()) {
             $query->where('professor_id', $request->user()->id);
         } else {
-            // Aluno vê apenas turmas que está matriculado
+            // Aluno vê todas as turmas que está matriculado
             $query->whereHas('alunos', function ($q) use ($request) {
                 $q->where('aluno_id', $request->user()->id);
             });
         }
 
         return response()->json($query->get());
+    }
+
+    /**
+     * Retorna o semestre atual baseado na data
+     * Semestre 1: Janeiro a Junho
+     * Semestre 2: Julho a Dezembro
+     */
+    private function getSemestreAtual()
+    {
+        $mesAtual = (int) date('m');
+        return $mesAtual >= 1 && $mesAtual <= 6 ? 1 : 2;
     }
 
     public function store(StoreTurmaRequest $request)

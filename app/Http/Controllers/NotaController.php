@@ -18,11 +18,29 @@ class NotaController extends Controller
                 $q->where('professor_id', $request->user()->id);
             });
         } else {
-            // Aluno vê apenas suas notas
-            $query->where('aluno_id', $request->user()->id);
+            // Aluno vê apenas suas notas do semestre atual
+            $semestreAtual = $this->getSemestreAtual();
+            $anoAtual = date('Y');
+            
+            $query->where('aluno_id', $request->user()->id)
+                ->whereHas('turma', function ($q) use ($semestreAtual, $anoAtual) {
+                    $q->where('semestre', $semestreAtual)
+                      ->where('ano', $anoAtual);
+                });
         }
 
         return response()->json($query->get());
+    }
+
+    /**
+     * Retorna o semestre atual baseado na data
+     * Semestre 1: Janeiro a Junho
+     * Semestre 2: Julho a Dezembro
+     */
+    private function getSemestreAtual()
+    {
+        $mesAtual = (int) date('m');
+        return $mesAtual >= 1 && $mesAtual <= 6 ? 1 : 2;
     }
 
     public function store(StoreNotaRequest $request)

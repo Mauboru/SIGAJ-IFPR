@@ -23,6 +23,8 @@ class UpdateUsuarioRequest extends FormRequest
             'role' => 'sometimes|required|in:professor,aluno',
             'instituicao' => 'nullable|string|max:255',
             'foto' => 'nullable|image|max:2048',
+            'turma_ids' => 'nullable|array',
+            'turma_ids.*' => 'exists:turmas,id',
         ];
     }
 }

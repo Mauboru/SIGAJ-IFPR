@@ -7,8 +7,229 @@
             </Button>
         </div>
 
-        <!-- Grid de Cards -->
-        <div v-if="aulas.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Filtros e Tabela para Alunos -->
+        <div v-if="user?.role === 'aluno'">
+            <!-- Filtros -->
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow mb-4 p-4">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Filtrar por Matéria
+                        </label>
+                        <select
+                            v-model="filtroMateria"
+                            class="w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 dark:focus:border-indigo-400 focus:ring-indigo-500 dark:focus:ring-indigo-400 sm:text-sm px-3 py-2 transition-colors"
+                        >
+                            <option value="">Todas as matérias</option>
+                            <option v-for="materia in materiasUnicas" :key="materia.id" :value="materia.id">
+                                {{ materia.nome }}
+                            </option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Filtrar por Data
+                        </label>
+                        <input
+                            v-model="filtroData"
+                            type="date"
+                            class="w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 dark:focus:border-indigo-400 focus:ring-indigo-500 dark:focus:ring-indigo-400 sm:text-sm px-3 py-2 transition-colors"
+                        />
+                    </div>
+                    <div class="flex items-end">
+                        <button
+                            @click="limparFiltros"
+                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800 transition-colors"
+                        >
+                            Limpar Filtros
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabela -->
+            <div v-if="aulasFiltradas.length > 0" class="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                        <thead class="bg-gray-50 dark:bg-gray-700">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                    Título
+                                </th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                    Data
+                                </th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                    Turma
+                                </th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                    Matéria
+                                </th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                    Descrição
+                                </th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                    Arquivos
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                            <tr 
+                                v-for="aula in aulasPaginadas" 
+                                :key="aula.id" 
+                                :class="[
+                                    'hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors',
+                                    isDataAtual(aula.data) ? 'bg-yellow-50 dark:bg-yellow-900/20 border-l-4 border-yellow-400 dark:border-yellow-500' : ''
+                                ]"
+                            >
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm font-medium text-gray-900 dark:text-white">
+                                        {{ aula.titulo }}
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm" :class="isDataAtual(aula.data) ? 'font-bold text-yellow-700 dark:text-yellow-400' : 'text-gray-500 dark:text-gray-400'">
+                                        {{ formatDate(aula.data) }}
+                                        <span v-if="isDataAtual(aula.data)" class="ml-2 text-xs bg-yellow-400 dark:bg-yellow-500 text-yellow-900 dark:text-yellow-900 px-2 py-0.5 rounded-full">
+                                            Hoje
+                                        </span>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm text-gray-500 dark:text-gray-400">
+                                        {{ aula.turma?.nome || '-' }}
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm text-gray-500 dark:text-gray-400">
+                                        {{ aula.materia?.nome || '-' }}
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="text-sm text-gray-500 dark:text-gray-400 max-w-xs truncate">
+                                        {{ aula.descricao || '-' }}
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex flex-col gap-1">
+                                        <span v-if="aula.arquivos && aula.arquivos.length > 0" class="text-sm text-indigo-600 dark:text-indigo-400">
+                                            {{ aula.arquivos.length }} arquivo(s)
+                                        </span>
+                                        <span v-else class="text-sm text-gray-400 dark:text-gray-500">
+                                            Sem arquivos
+                                        </span>
+                                        <div v-if="aula.arquivos && aula.arquivos.length > 0" class="flex flex-wrap gap-1 mt-1">
+                                            <button
+                                                v-for="arquivo in aula.arquivos" 
+                                                :key="arquivo.id"
+                                                @click="downloadArquivo(arquivo)"
+                                                class="text-xs text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300 hover:underline"
+                                                :title="arquivo.nome_original"
+                                            >
+                                                📄 {{ arquivo.nome_original.length > 20 ? arquivo.nome_original.substring(0, 20) + '...' : arquivo.nome_original }}
+                                            </button>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Paginação -->
+            <div v-if="totalPages > 1" class="bg-white dark:bg-gray-800 px-4 py-3 flex items-center justify-between border-t border-gray-200 dark:border-gray-700 sm:px-6">
+                <div class="flex-1 flex justify-between sm:hidden">
+                    <button
+                        @click="currentPage = Math.max(1, currentPage - 1)"
+                        :disabled="currentPage === 1"
+                        class="relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        Anterior
+                    </button>
+                    <button
+                        @click="currentPage = Math.min(totalPages, currentPage + 1)"
+                        :disabled="currentPage === totalPages"
+                        class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        Próxima
+                    </button>
+                </div>
+                <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                    <div>
+                        <p class="text-sm text-gray-700 dark:text-gray-300">
+                            Mostrando
+                            <span class="font-medium">{{ ((currentPage - 1) * itemsPerPage) + 1 }}</span>
+                            até
+                            <span class="font-medium">{{ Math.min(currentPage * itemsPerPage, aulasFiltradas.length) }}</span>
+                            de
+                            <span class="font-medium">{{ aulasFiltradas.length }}</span>
+                            aulas
+                        </p>
+                    </div>
+                    <div>
+                        <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                            <button
+                                @click="currentPage = Math.max(1, currentPage - 1)"
+                                :disabled="currentPage === 1"
+                                class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                <span class="sr-only">Anterior</span>
+                                <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+                                </svg>
+                            </button>
+                            
+                            <template v-for="page in totalPages" :key="page">
+                                <button
+                                    v-if="page === 1 || page === totalPages || (page >= currentPage - 2 && page <= currentPage + 2)"
+                                    @click="currentPage = page"
+                                    :class="[
+                                        'relative inline-flex items-center px-4 py-2 border text-sm font-medium',
+                                        page === currentPage
+                                            ? 'z-10 bg-indigo-50 dark:bg-indigo-900/30 border-indigo-500 dark:border-indigo-500 text-indigo-600 dark:text-indigo-400'
+                                            : 'bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600'
+                                    ]"
+                                >
+                                    {{ page }}
+                                </button>
+                                <span
+                                    v-else-if="page === currentPage - 3 || page === currentPage + 3"
+                                    class="relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm font-medium text-gray-700 dark:text-gray-300"
+                                >
+                                    ...
+                                </span>
+                            </template>
+                            
+                            <button
+                                @click="currentPage = Math.min(totalPages, currentPage + 1)"
+                                :disabled="currentPage === totalPages"
+                                class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                <span class="sr-only">Próxima</span>
+                                <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                                </svg>
+                            </button>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+            <!-- Estado vazio com filtros -->
+            <div v-else class="bg-white dark:bg-gray-800 rounded-lg shadow p-12 text-center">
+                <svg class="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                </svg>
+                <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-white">Nenhuma aula encontrada</h3>
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                    Tente ajustar os filtros ou não há aulas disponíveis no momento.
+                </p>
+            </div>
+        </div>
+
+        <!-- Grid de Cards para Professores -->
+        <div v-else-if="aulas.length > 0 && user?.role === 'professor'" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <div
                 v-for="aula in aulas"
                 :key="aula.id"
@@ -250,7 +471,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, watch } from 'vue';
 import axios from 'axios';
 import store from '../../router/store';
 import FormInput from '../../components/FormInput.vue';
@@ -270,6 +491,10 @@ const showArquivoModal = ref(false);
 const selectedAula = ref(null);
 const arquivoFile = ref(null);
 const loadingArquivo = ref(false);
+const filtroMateria = ref('');
+const filtroData = ref('');
+const currentPage = ref(1);
+const itemsPerPage = ref(10);
 
 const uploadArquivo = (aula) => {
     selectedAula.value = aula;
@@ -334,6 +559,81 @@ const formatDate = (date) => {
     });
 };
 
+const isDataAtual = (date) => {
+    if (!date) return false;
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+    const dataAula = new Date(date);
+    dataAula.setHours(0, 0, 0, 0);
+    return dataAula.getTime() === hoje.getTime();
+};
+
+// Matérias únicas para filtro
+const materiasUnicas = computed(() => {
+    const materiasMap = new Map();
+    aulas.value.forEach(aula => {
+        if (aula.materia && !materiasMap.has(aula.materia.id)) {
+            materiasMap.set(aula.materia.id, aula.materia);
+        }
+    });
+    return Array.from(materiasMap.values()).sort((a, b) => a.nome.localeCompare(b.nome));
+});
+
+// Aulas filtradas e ordenadas (da data atual para a mais futura)
+const aulasFiltradas = computed(() => {
+    let filtradas = aulas.value.filter(aula => {
+        // Filtrar por matéria
+        if (filtroMateria.value && aula.materia?.id != filtroMateria.value) {
+            return false;
+        }
+
+        // Filtrar por data se especificado
+        if (filtroData.value) {
+            const dataAula = new Date(aula.data);
+            dataAula.setHours(0, 0, 0, 0);
+            const dataFiltro = new Date(filtroData.value);
+            dataFiltro.setHours(0, 0, 0, 0);
+            
+            if (dataAula.getTime() !== dataFiltro.getTime()) {
+                return false;
+            }
+        }
+
+        return true;
+    });
+
+    // Ordenar por data crescente (da atual para a mais futura)
+    filtradas.sort((a, b) => {
+        const dataA = new Date(a.data);
+        const dataB = new Date(b.data);
+        return dataA - dataB; // Ordem crescente
+    });
+
+    return filtradas;
+});
+
+// Aulas paginadas
+const aulasPaginadas = computed(() => {
+    const start = (currentPage.value - 1) * itemsPerPage.value;
+    const end = start + itemsPerPage.value;
+    return aulasFiltradas.value.slice(start, end);
+});
+
+// Total de páginas
+const totalPages = computed(() => {
+    return Math.ceil(aulasFiltradas.value.length / itemsPerPage.value);
+});
+
+// Resetar página quando filtros mudarem
+watch([filtroMateria, filtroData], () => {
+    currentPage.value = 1;
+});
+
+const limparFiltros = () => {
+    filtroMateria.value = '';
+    filtroData.value = '';
+};
+
 const loadAulas = async () => {
     try {
         const response = await axios.get('/aulas');
@@ -341,6 +641,15 @@ const loadAulas = async () => {
             ...aula,
             arquivos: aula.arquivos || []
         }));
+        // Debug: mostrar todas as aulas carregadas
+        if (user.value?.role === 'aluno') {
+            console.log('Aulas carregadas:', aulas.value.length);
+            console.log('Aulas por matéria:', aulas.value.reduce((acc, aula) => {
+                const materiaNome = aula.materia?.nome || 'Sem matéria';
+                acc[materiaNome] = (acc[materiaNome] || 0) + 1;
+                return acc;
+            }, {}));
+        }
     } catch (error) {
         console.error('Erro ao carregar aulas:', error);
         if (error.response?.status === 401) {

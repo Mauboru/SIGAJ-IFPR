@@ -16,46 +16,63 @@
                 <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Comece cadastrando um novo {{ user?.role === 'professor' ? 'aluno' : 'usuário' }}.</p>
             </div>
 
-            <!-- Grid de cards -->
-            <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <div 
-                    v-for="usuario in usuarios" 
-                    :key="usuario.id" 
-                    class="bg-white dark:bg-gray-800 rounded-lg shadow hover:shadow-lg transition-shadow border border-gray-200 dark:border-gray-700 overflow-hidden"
-                >
-                    <div class="p-6">
-                        <div class="flex items-center">
-                            <div class="flex-shrink-0">
-                                <img
-                                    v-if="usuario.foto"
-                                    :src="`/storage/${usuario.foto}`"
-                                    :alt="usuario.name"
-                                    class="h-16 w-16 rounded-full object-cover ring-2 ring-gray-200 dark:ring-gray-700"
-                                />
-                                <div
-                                    v-else
-                                    class="h-16 w-16 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 dark:from-indigo-600 dark:to-purple-700 flex items-center justify-center ring-2 ring-gray-200 dark:ring-gray-700"
-                                >
-                                    <span class="text-white text-xl font-semibold">{{ usuario.name.charAt(0).toUpperCase() }}</span>
-                                </div>
-                            </div>
-                            <div class="ml-4 flex-1 min-w-0">
-                                <div class="flex items-center justify-between">
-                                    <div>
-                                        <p class="text-lg font-semibold text-gray-900 dark:text-white truncate">
-                                            {{ usuario.name }}
-                                        </p>
-                                        <p class="text-sm text-gray-500 dark:text-gray-400 truncate">
-                                            {{ usuario.email }}
-                                        </p>
+            <!-- Tabela de usuários -->
+            <div v-else class="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                        <thead class="bg-gray-50 dark:bg-gray-700">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                    Usuário
+                                </th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                    E-mail
+                                </th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                    Perfil
+                                </th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                    Instituição
+                                </th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                    Turmas
+                                </th>
+                                <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                    Ações
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                            <tr v-for="usuario in usuarios" :key="usuario.id" class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center">
+                                        <div class="flex-shrink-0 h-10 w-10">
+                                            <img
+                                                v-if="usuario.foto"
+                                                :src="`/storage/${usuario.foto}`"
+                                                :alt="usuario.name"
+                                                class="h-10 w-10 rounded-full object-cover"
+                                            />
+                                            <div
+                                                v-else
+                                                class="h-10 w-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 dark:from-indigo-600 dark:to-purple-700 flex items-center justify-center"
+                                            >
+                                                <span class="text-white text-sm font-semibold">{{ usuario.name.charAt(0).toUpperCase() }}</span>
+                                            </div>
+                                        </div>
+                                        <div class="ml-4">
+                                            <div class="text-sm font-medium text-gray-900 dark:text-white">
+                                                {{ usuario.name }}
+                                            </div>
+                                        </div>
                                     </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                            <div class="flex items-center justify-between">
-                                <div class="flex items-center space-x-2">
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm text-gray-500 dark:text-gray-400">
+                                        {{ usuario.email }}
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
                                     <span 
                                         :class="[
                                             'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium',
@@ -66,25 +83,40 @@
                                     >
                                         {{ usuario.role === 'professor' ? 'Professor' : 'Aluno' }}
                                     </span>
-                                    <span v-if="usuario.instituicao" class="text-xs text-gray-500 dark:text-gray-400 truncate">
-                                        {{ usuario.instituicao }}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="bg-gray-50 dark:bg-gray-700 px-6 py-3 flex justify-end space-x-2 border-t border-gray-200 dark:border-gray-600">
-                        <button
-                            @click="editUsuario(usuario)"
-                            class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-indigo-700 dark:text-indigo-300 bg-indigo-100 dark:bg-indigo-900 hover:bg-indigo-200 dark:hover:bg-indigo-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-700 transition-colors"
-                        >
-                            <svg class="mr-1.5 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                            </svg>
-                            Editar
-                        </button>
-                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm text-gray-500 dark:text-gray-400">
+                                        {{ usuario.instituicao || '-' }}
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="text-sm text-gray-500 dark:text-gray-400">
+                                        <div v-if="usuario.turmas_como_aluno && usuario.turmas_como_aluno.length > 0" class="flex flex-wrap gap-1">
+                                            <span 
+                                                v-for="turma in usuario.turmas_como_aluno" 
+                                                :key="turma.id"
+                                                class="inline-flex items-center px-2 py-1 rounded text-xs bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                                            >
+                                                {{ turma.nome }}
+                                            </span>
+                                        </div>
+                                        <span v-else class="text-gray-400 dark:text-gray-500">Nenhuma turma</span>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                    <button
+                                        @click="editUsuario(usuario)"
+                                        class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-indigo-700 dark:text-indigo-300 bg-indigo-100 dark:bg-indigo-900 hover:bg-indigo-200 dark:hover:bg-indigo-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-700 transition-colors"
+                                    >
+                                        <svg class="mr-1.5 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                        </svg>
+                                        Editar
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
 
@@ -150,6 +182,7 @@
                                 </label>
                                 <select
                                     v-model="form.role"
+                                    @change="handleRoleChange"
                                     class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 dark:focus:border-indigo-400 focus:ring-indigo-500 dark:focus:ring-indigo-400 sm:text-sm px-3 py-2 transition-colors"
                                     required
                                 >
@@ -208,6 +241,40 @@
                                 placeholder="Nome da instituição (opcional)"
                                 :error="errors.instituicao"
                             />
+
+                            <!-- Campo de Turmas (apenas para alunos) -->
+                            <div v-if="form.role === 'aluno'">
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                    Turmas
+                                </label>
+                                <div class="space-y-2 max-h-48 overflow-y-auto border border-gray-300 dark:border-gray-600 rounded-md p-3 bg-white dark:bg-gray-700">
+                                    <label 
+                                        v-for="turma in turmasDisponiveis" 
+                                        :key="turma.id"
+                                        class="flex items-center space-x-2 hover:bg-gray-50 dark:hover:bg-gray-600 p-2 rounded cursor-pointer"
+                                    >
+                                        <input
+                                            type="checkbox"
+                                            :value="turma.id"
+                                            v-model="form.turma_ids"
+                                            class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700"
+                                        />
+                                        <span class="text-sm text-gray-900 dark:text-gray-100">
+                                            {{ turma.nome }} 
+                                            <span class="text-xs text-gray-500 dark:text-gray-400">
+                                                ({{ turma.ano }}/{{ turma.semestre }})
+                                            </span>
+                                        </span>
+                                    </label>
+                                    <p v-if="turmasDisponiveis.length === 0" class="text-sm text-gray-500 dark:text-gray-400 italic">
+                                        Nenhuma turma disponível
+                                    </p>
+                                </div>
+                                <p v-if="errors.turma_ids" class="mt-1 text-sm text-red-600 dark:text-red-400">{{ errors.turma_ids }}</p>
+                                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                    Selecione as turmas em que o aluno está matriculado
+                                </p>
+                            </div>
                         </div>
                     </div>
                 </form>
@@ -233,6 +300,7 @@ import Modal from '../../components/Modal.vue';
 
 const user = computed(() => store.getters.getUser());
 const usuarios = ref([]);
+const turmasDisponiveis = ref([]);
 const showCreateModal = ref(false);
 const showEditModal = ref(false);
 const editingUsuario = ref(null);
@@ -245,7 +313,8 @@ const form = ref({
     password: '',
     password_confirmation: '',
     role: '',
-    instituicao: ''
+    instituicao: '',
+    turma_ids: []
 });
 
 // Inicializar role como 'aluno' se for professor
@@ -266,29 +335,52 @@ const loadUsuarios = async () => {
     }
 };
 
-const openCreateModal = () => {
+const loadTurmas = async () => {
+    try {
+        if (user.value?.role === 'professor') {
+            const response = await axios.get('/turmas');
+            turmasDisponiveis.value = response.data;
+        }
+    } catch (error) {
+        console.error('Erro ao carregar turmas:', error);
+    }
+};
+
+const handleRoleChange = () => {
+    // Limpar turmas se não for aluno
+    if (form.value.role !== 'aluno') {
+        form.value.turma_ids = [];
+    }
+};
+
+const openCreateModal = async () => {
     form.value = {
         name: '',
         email: '',
         password: '',
         password_confirmation: '',
         role: 'aluno', // Fixar como aluno quando professor criar
-        instituicao: ''
+        instituicao: '',
+        turma_ids: []
     };
     errors.value = {};
+    await loadTurmas();
     showCreateModal.value = true;
 };
 
-const editUsuario = (usuario) => {
+const editUsuario = async (usuario) => {
     editingUsuario.value = usuario;
+    const turmaIds = usuario.turmas_como_aluno ? usuario.turmas_como_aluno.map(t => t.id) : [];
     form.value = {
         name: usuario.name,
         email: usuario.email,
         password: '',
         password_confirmation: '',
         role: usuario.role,
-        instituicao: usuario.instituicao || ''
+        instituicao: usuario.instituicao || '',
+        turma_ids: turmaIds
     };
+    await loadTurmas();
     showEditModal.value = true;
 };
 
@@ -302,7 +394,8 @@ const closeModal = () => {
         password: '',
         password_confirmation: '',
         role: user.value?.role === 'professor' ? 'aluno' : '',
-        instituicao: ''
+        instituicao: '',
+        turma_ids: []
     };
     errors.value = {};
 };
@@ -312,10 +405,17 @@ const saveUsuario = async () => {
     loading.value = true;
 
     try {
+        const payload = { ...form.value };
+        // Se for edição e não há senha, remover os campos de senha
+        if (editingUsuario.value && !payload.password) {
+            delete payload.password;
+            delete payload.password_confirmation;
+        }
+        
         if (editingUsuario.value) {
-            await axios.put(`/usuarios/${editingUsuario.value.id}`, form.value);
+            await axios.put(`/usuarios/${editingUsuario.value.id}`, payload);
         } else {
-            await axios.post('/usuarios', form.value);
+            await axios.post('/usuarios', payload);
         }
         await loadUsuarios();
         closeModal();
@@ -333,6 +433,6 @@ const saveUsuario = async () => {
 onMounted(() => {
     initializeForm();
     loadUsuarios();
+    loadTurmas();
 });
 </script>
-

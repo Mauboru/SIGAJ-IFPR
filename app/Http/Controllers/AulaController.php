@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Aula;
 use App\Models\Presenca;
+use App\Models\Turma;
 use Illuminate\Http\Request;
 use App\Http\Requests\Aula\StoreAulaRequest;
 use App\Http\Requests\Aula\UpdateAulaRequest;
@@ -20,10 +21,19 @@ class AulaController extends Controller
                 $q->where('professor_id', $request->user()->id);
             });
         } else {
-            // Aluno vê aulas de turmas que está matriculado
-            $query->whereHas('turma.alunos', function ($q) use ($request) {
+            // Aluno vê aulas de todas as turmas que está matriculado
+            // Buscar IDs das turmas do aluno
+            $turmaIds = Turma::whereHas('alunos', function ($q) use ($request) {
                 $q->where('aluno_id', $request->user()->id);
-            });
+            })->pluck('id');
+            
+            // Filtrar aulas por essas turmas
+            if ($turmaIds->isNotEmpty()) {
+                $query->whereIn('turma_id', $turmaIds);
+            } else {
+                // Se não tem turmas, não retorna nenhuma aula
+                $query->whereRaw('1 = 0');
+            }
         }
 
         $query->orderBy('data', 'desc');

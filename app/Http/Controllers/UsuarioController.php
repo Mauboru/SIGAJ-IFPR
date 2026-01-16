@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\Turma;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
@@ -25,7 +26,7 @@ class UsuarioController extends Controller
             $query->where('role', $request->role);
         }
 
-        return response()->json($query->get());
+        return response()->json($query->with('turmasComoAluno')->get());
     }
 
     public function store(StoreUsuarioRequest $request)
@@ -36,6 +37,9 @@ class UsuarioController extends Controller
         }
 
         $data = $request->validated();
+        $turmaIds = $data['turma_ids'] ?? [];
+        unset($data['turma_ids']);
+        
         $data['password'] = Hash::make($data['password']);
 
         $user = User::create($data);
@@ -46,7 +50,19 @@ class UsuarioController extends Controller
             $user->update(['foto' => $path]);
         }
 
-        return response()->json($user, 201);
+        // Vincular aluno a turmas se for aluno e turmas foram fornecidas
+        if ($user->isAluno() && !empty($turmaIds)) {
+            $turmasValidas = Turma::whereIn('id', $turmaIds)
+                ->where('professor_id', $request->user()->id)
+                ->pluck('id')
+                ->toArray();
+            
+            if (!empty($turmasValidas)) {
+                $user->turmasComoAluno()->sync($turmasValidas);
+            }
+        }
+
+        return response()->json($user->load('turmasComoAluno'), 201);
     }
 
     public function show(Request $request, User $usuario)
@@ -56,7 +72,7 @@ class UsuarioController extends Controller
             abort(403, 'Você não tem permissão para visualizar este usuário');
         }
 
-        return response()->json($usuario);
+        return response()->json($usuario->load('turmasComoAluno'));
     }
 
     public function update(UpdateUsuarioRequest $request, User $usuario)
@@ -67,9 +83,11 @@ class UsuarioController extends Controller
         }
 
         $data = $request->validated();
+        $turmaIds = $data['turma_ids'] ?? null;
+        unset($data['turma_ids']);
 
         // Atualizar senha se fornecida
-        if (isset($data['password'])) {
+        if (isset($data['password']) && !empty($data['password'])) {
             $data['password'] = Hash::make($data['password']);
         } else {
             unset($data['password']);
@@ -86,7 +104,17 @@ class UsuarioController extends Controller
 
         $usuario->update($data);
 
-        return response()->json($usuario);
+        // Atualizar vínculos de turmas se for aluno e turmas foram fornecidas
+        if ($usuario->isAluno() && $turmaIds !== null) {
+            $turmasValidas = Turma::whereIn('id', $turmaIds)
+                ->where('professor_id', $request->user()->id)
+                ->pluck('id')
+                ->toArray();
+            
+            $usuario->turmasComoAluno()->sync($turmasValidas);
+        }
+
+        return response()->json($usuario->load('turmasComoAluno'));
     }
 
     public function destroy(Request $request, User $usuario)

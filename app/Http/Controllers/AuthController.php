@@ -83,13 +83,43 @@ class AuthController extends Controller
 
     public function me(Request $request)
     {
-        return response()->json([
-            'id' => $request->user()->id,
-            'name' => $request->user()->name,
-            'email' => $request->user()->email,
-            'role' => $request->user()->role,
-            'instituicao' => $request->user()->instituicao,
-            'foto' => $request->user()->foto,
-        ]);
+        $user = $request->user();
+        $data = [
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'role' => $user->role,
+            'instituicao' => $user->instituicao,
+            'foto' => $user->foto,
+        ];
+
+        // Se for aluno, incluir informações das turmas do semestre atual
+        if ($user->isAluno()) {
+            $semestreAtual = $this->getSemestreAtual();
+            $anoAtual = date('Y');
+            
+            $turmasSemestreAtual = $user->turmasComoAluno()
+                ->where('semestre', $semestreAtual)
+                ->where('ano', $anoAtual)
+                ->with(['materias', 'professor'])
+                ->get();
+            
+            $data['turmas_semestre_atual'] = $turmasSemestreAtual;
+            $data['semestre_atual'] = $semestreAtual;
+            $data['ano_atual'] = $anoAtual;
+        }
+
+        return response()->json($data);
+    }
+
+    /**
+     * Retorna o semestre atual baseado na data
+     * Semestre 1: Janeiro a Junho
+     * Semestre 2: Julho a Dezembro
+     */
+    private function getSemestreAtual()
+    {
+        $mesAtual = (int) date('m');
+        return $mesAtual >= 1 && $mesAtual <= 6 ? 1 : 2;
     }
 }

@@ -20,13 +20,35 @@ class MateriaController extends Controller
         if ($request->user()->isProfessor()) {
             $query->where('professor_id', $request->user()->id);
         } else {
-            // Aluno vê matérias de turmas que está matriculado
-            $query->whereHas('turmas.alunos', function ($q) use ($request) {
+            // Aluno vê matérias de todas as turmas que está matriculado
+            // Buscar IDs das turmas do aluno
+            $turmaIds = Turma::whereHas('alunos', function ($q) use ($request) {
                 $q->where('aluno_id', $request->user()->id);
-            });
+            })->pluck('id');
+            
+            // Buscar matérias vinculadas a essas turmas
+            if ($turmaIds->isNotEmpty()) {
+                $query->whereHas('turmas', function ($q) use ($turmaIds) {
+                    $q->whereIn('turmas.id', $turmaIds);
+                });
+            } else {
+                // Se não tem turmas, não retorna nenhuma matéria
+                $query->whereRaw('1 = 0');
+            }
         }
 
         return response()->json($query->get());
+    }
+
+    /**
+     * Retorna o semestre atual baseado na data
+     * Semestre 1: Janeiro a Junho
+     * Semestre 2: Julho a Dezembro
+     */
+    private function getSemestreAtual()
+    {
+        $mesAtual = (int) date('m');
+        return $mesAtual >= 1 && $mesAtual <= 6 ? 1 : 2;
     }
 
     public function store(StoreMateriaRequest $request)
