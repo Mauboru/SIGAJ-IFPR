@@ -1,0 +1,32 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::table('presencas', function (Blueprint $table) {
+            // Adicionar quantidade_faltas
+            $table->integer('quantidade_faltas')->default(0)->after('aluno_id');
+            
+            // Manter presente por enquanto para compatibilidade, mas será removido depois
+            // Ou podemos remover agora se não houver dados importantes
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::table('presencas', function (Blueprint $table) {
+            $table->dropColumn('quantidade_faltas');
+        });
+    }
+};

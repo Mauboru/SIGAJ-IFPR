@@ -145,7 +145,7 @@
                             
                             <!-- Formulário para adicionar nova aula -->
                             <div class="bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-lg p-4 mb-4">
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                                     <div>
                                         <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
                                             Data da Aula
@@ -160,18 +160,33 @@
                                         <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
                                             Tema da Aula
                                         </label>
+                                        <input
+                                            v-model="novaAula.titulo"
+                                            type="text"
+                                            placeholder="Ex: Introdução à Programação Web"
+                                            @keyup.enter="adicionarAula"
+                                            class="w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 dark:focus:border-indigo-400 focus:ring-indigo-500 dark:focus:ring-indigo-400 sm:text-sm px-3 py-2"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                            Quantidade de Aulas
+                                            <span class="text-gray-500 text-xs">(1-10)</span>
+                                        </label>
                                         <div class="flex gap-2">
                                             <input
-                                                v-model="novaAula.titulo"
-                                                type="text"
-                                                placeholder="Ex: Introdução à Programação Web"
+                                                v-model.number="novaAula.quantidade_aulas"
+                                                type="number"
+                                                min="1"
+                                                max="10"
+                                                placeholder="Ex: 4"
                                                 @keyup.enter="adicionarAula"
                                                 class="flex-1 rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 dark:focus:border-indigo-400 focus:ring-indigo-500 dark:focus:ring-indigo-400 sm:text-sm px-3 py-2"
                                             />
                                             <button
                                                 type="button"
                                                 @click="adicionarAula"
-                                                :disabled="!novaAula.data || !novaAula.titulo"
+                                                :disabled="!novaAula.data || !novaAula.titulo || !novaAula.quantidade_aulas"
                                                 class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-sm font-medium transition-colors"
                                             >
                                                 Adicionar
@@ -190,6 +205,7 @@
                                                 <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">#</th>
                                                 <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Data</th>
                                                 <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Tema</th>
+                                                <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Qtd. Aulas</th>
                                                 <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Ações</th>
                                             </tr>
                                         </thead>
@@ -207,6 +223,9 @@
                                                 </td>
                                                 <td class="px-4 py-3 text-sm text-gray-900 dark:text-gray-100">
                                                     {{ aula.titulo }}
+                                                </td>
+                                                <td class="px-4 py-3 whitespace-nowrap text-center text-sm text-gray-900 dark:text-gray-100">
+                                                    {{ aula.quantidade_aulas || 1 }}
                                                 </td>
                                                 <td class="px-4 py-3 whitespace-nowrap text-right text-sm font-medium">
                                                     <button
@@ -476,14 +495,6 @@
                                 >
                                     <div class="flex items-center justify-between">
                                         <div class="flex items-center space-x-3 flex-1">
-                                            <div class="flex-shrink-0">
-                                                <input
-                                                    type="checkbox"
-                                                    :checked="presenca.presente"
-                                                    @change="togglePresenca(index)"
-                                                    class="w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700"
-                                                />
-                                            </div>
                                             <div class="flex-1 min-w-0">
                                                 <p class="text-sm font-medium text-gray-900 dark:text-white">
                                                     {{ presenca.aluno?.name || 'Aluno' }}
@@ -492,14 +503,32 @@
                                                     {{ presenca.aluno.email }}
                                                 </p>
                                             </div>
+                                            <div class="flex items-center space-x-2">
+                                                <label class="text-xs text-gray-600 dark:text-gray-400 whitespace-nowrap">
+                                                    Faltas:
+                                                </label>
+                                                <input
+                                                    type="number"
+                                                    v-model.number="presenca.quantidade_faltas"
+                                                    :min="0"
+                                                    :max="selectedAulaDetalhes.quantidade_aulas || 1"
+                                                    @change="updatePresencaStatus(index)"
+                                                    class="w-20 rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 dark:focus:border-indigo-400 focus:ring-indigo-500 dark:focus:ring-indigo-400 text-sm px-2 py-1 text-center"
+                                                />
+                                                <span class="text-xs text-gray-500 dark:text-gray-400">
+                                                    / {{ selectedAulaDetalhes.quantidade_aulas || 1 }}
+                                                </span>
+                                            </div>
                                             <div class="flex-shrink-0">
                                                 <span
-                                                    :class="presenca.presente 
+                                                    :class="(presenca.quantidade_faltas || 0) === 0
                                                         ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' 
-                                                        : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'"
+                                                        : (presenca.quantidade_faltas || 0) >= (selectedAulaDetalhes.quantidade_aulas || 1)
+                                                        ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
+                                                        : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'"
                                                     class="px-2 py-1 text-xs font-medium rounded-full"
                                                 >
-                                                    {{ presenca.presente ? 'Presente' : 'Faltou' }}
+                                                    {{ (presenca.quantidade_faltas || 0) === 0 ? 'Presente' : (presenca.quantidade_faltas || 0) >= (selectedAulaDetalhes.quantidade_aulas || 1) ? 'Faltou Tudo' : 'Falta Parcial' }}
                                                 </span>
                                             </div>
                                         </div>
@@ -601,7 +630,8 @@ const form = ref({
 
 const novaAula = ref({
     data: '',
-    titulo: ''
+    titulo: '',
+    quantidade_aulas: 1
 });
 
 const loadMaterias = async () => {
@@ -634,7 +664,7 @@ const viewMateria = async (materia) => {
         showDetailsModal.value = true;
     } catch (error) {
         console.error('Erro ao carregar detalhes da matéria:', error);
-        alert('Erro ao carregar detalhes da matéria');
+        window.toast?.error('Erro ao carregar detalhes da matéria');
     }
 };
 
@@ -652,7 +682,8 @@ const editMateria = async (materia) => {
             turma_ids: materiaCompleta.turmas?.map(t => t.id) || [],
             aulas: materiaCompleta.aulas?.map(aula => ({
                 titulo: aula.titulo,
-                data: aula.data
+                data: aula.data,
+                quantidade_aulas: aula.quantidade_aulas || 1
             })) || [],
             arquivos_extras: []
         };
@@ -666,7 +697,7 @@ const editMateria = async (materia) => {
         };
     }
     
-    novaAula.value = { data: '', titulo: '' };
+    novaAula.value = { data: '', titulo: '', quantidade_aulas: 1 };
     showEditModal.value = true;
 };
 
@@ -683,7 +714,7 @@ const closeModal = () => {
         aulas: [],
         arquivos_extras: []
     };
-    novaAula.value = { data: '', titulo: '' };
+    novaAula.value = { data: '', titulo: '', quantidade_aulas: 1 };
     errors.value = {};
 };
 
@@ -718,7 +749,7 @@ const adicionarAula = () => {
     form.value.aulas.sort((a, b) => new Date(a.data) - new Date(b.data));
     
     // Limpar formulário
-    novaAula.value = { data: '', titulo: '' };
+    novaAula.value = { data: '', titulo: '', quantidade_aulas: 1 };
 };
 
 const removerAula = (index) => {
@@ -773,15 +804,22 @@ const viewAula = async (aula) => {
             presencas.value = selectedAulaDetalhes.value.turma.alunos.map(aluno => ({
                 aluno_id: aluno.id,
                 aluno: aluno,
-                presente: false,
+                presente: true,
+                quantidade_faltas: 0,
                 observacoes: null
+            }));
+        } else {
+            // Garantir que presenças existentes tenham quantidade_faltas
+            presencas.value = presencas.value.map(p => ({
+                ...p,
+                quantidade_faltas: p.quantidade_faltas ?? (p.presente ? 0 : (selectedAulaDetalhes.value.quantidade_aulas || 1))
             }));
         }
         
         showAulaDetailsModal.value = true;
     } catch (error) {
         console.error('Erro ao carregar detalhes da aula:', error);
-        alert('Erro ao carregar detalhes da aula');
+        window.toast?.error('Erro ao carregar detalhes da aula');
     }
 };
 
@@ -791,32 +829,63 @@ const closeAulaModal = () => {
     presencas.value = [];
 };
 
-const togglePresenca = (index) => {
+const updatePresencaStatus = (index) => {
     if (presencas.value[index]) {
-        presencas.value[index].presente = !presencas.value[index].presente;
+        const quantidadeAulas = selectedAulaDetalhes.value?.quantidade_aulas || 1;
+        const quantidadeFaltas = presencas.value[index].quantidade_faltas || 0;
+        
+        // Garantir que quantidade_faltas não seja maior que quantidade_aulas
+        if (quantidadeFaltas > quantidadeAulas) {
+            presencas.value[index].quantidade_faltas = quantidadeAulas;
+        }
+        if (quantidadeFaltas < 0) {
+            presencas.value[index].quantidade_faltas = 0;
+        }
+        
+        // Atualizar presente baseado em quantidade_faltas
+        presencas.value[index].presente = quantidadeFaltas === 0;
     }
 };
 
 const salvarChamada = async () => {
-    if (!selectedAulaDetalhes.value || !user.value?.isProfessor()) return;
+    if (!selectedAulaDetalhes.value || user.value?.role !== 'professor') return;
     
     salvandoChamada.value = true;
     try {
-        const presencasData = presencas.value.map(p => ({
-            aluno_id: p.aluno_id || p.aluno?.id,
-            presente: p.presente || false,
-            observacoes: p.observacoes || null
-        }));
+        const presencasData = presencas.value
+            .filter(p => {
+                const alunoId = p.aluno_id || p.aluno?.id;
+                return alunoId !== undefined && alunoId !== null;
+            })
+            .map(p => {
+                const alunoId = p.aluno_id || p.aluno?.id;
+                const quantidadeAulas = selectedAulaDetalhes.value?.quantidade_aulas || 1;
+                const quantidadeFaltas = Math.min(Math.max(parseInt(p.quantidade_faltas) || 0, 0), quantidadeAulas);
+                
+                return {
+                    aluno_id: parseInt(alunoId),
+                    quantidade_faltas: quantidadeFaltas,
+                    observacoes: p.observacoes || null
+                };
+            });
+        
+        if (presencasData.length === 0) {
+            window.toast?.warning('Nenhuma presença válida para salvar');
+            return;
+        }
         
         const response = await axios.post(`/aulas/${selectedAulaDetalhes.value.id}/chamada`, {
             presencas: presencasData
         });
         
         presencas.value = response.data.presencas || presencas.value;
-        alert('Chamada registrada com sucesso!');
+        window.toast?.success('Chamada registrada com sucesso!');
     } catch (error) {
         console.error('Erro ao salvar chamada:', error);
-        alert('Erro ao salvar chamada: ' + (error.response?.data?.message || error.message));
+        const errorMessage = error.response?.data?.message || 
+                           (error.response?.data?.errors ? JSON.stringify(error.response.data.errors) : null) ||
+                           error.message;
+        window.toast?.error('Erro ao salvar chamada: ' + errorMessage);
     } finally {
         salvandoChamada.value = false;
     }
@@ -838,7 +907,7 @@ const downloadArquivoAula = async (arquivo) => {
         window.URL.revokeObjectURL(url);
     } catch (error) {
         console.error('Erro ao baixar arquivo:', error);
-        alert('Erro ao baixar arquivo: ' + (error.response?.data?.message || error.message));
+        window.toast?.error('Erro ao baixar arquivo: ' + (error.response?.data?.message || error.message));
     }
 };
 
@@ -868,7 +937,7 @@ const downloadArquivo = async (arquivo) => {
         window.URL.revokeObjectURL(url);
     } catch (error) {
         console.error('Erro ao baixar arquivo:', error);
-        alert('Erro ao baixar arquivo: ' + (error.response?.data?.message || error.message));
+        window.toast?.error('Erro ao baixar arquivo: ' + (error.response?.data?.message || error.message));
     }
 };
 
@@ -920,8 +989,9 @@ const saveMateria = async () => {
         console.error('Erro ao salvar matéria:', error);
         if (error.response?.status === 422) {
             errors.value = error.response.data.errors || {};
+            window.toast?.error('Por favor, corrija os erros no formulário');
         } else {
-            alert('Erro ao salvar matéria: ' + (error.response?.data?.message || error.message));
+            window.toast?.error('Erro ao salvar matéria: ' + (error.response?.data?.message || error.message));
         }
     } finally {
         loading.value = false;
@@ -934,8 +1004,9 @@ const deleteMateria = async (materia) => {
     try {
         await axios.delete(`/materias/${materia.id}`);
         await loadMaterias();
+        window.toast?.success('Matéria excluída com sucesso!');
     } catch (error) {
-        alert('Erro ao excluir matéria');
+        window.toast?.error('Erro ao excluir matéria: ' + (error.response?.data?.message || error.message));
     }
 };
 

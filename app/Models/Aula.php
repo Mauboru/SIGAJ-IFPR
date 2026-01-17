@@ -16,6 +16,7 @@ class Aula extends Model
         'titulo',
         'descricao',
         'data',
+        'quantidade_aulas',
     ];
 
     protected $casts = [

@@ -19,6 +19,7 @@ class UpdateAulaRequest extends FormRequest
             'data' => 'sometimes|required|date',
             'turma_id' => 'sometimes|required|exists:turmas,id',
             'materia_id' => 'sometimes|required|exists:materias,id',
+            'quantidade_aulas' => 'sometimes|required|integer|min:1|max:10',
         ];
     }
 }

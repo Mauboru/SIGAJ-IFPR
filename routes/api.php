@@ -48,6 +48,7 @@ Route::middleware('auth:sanctum')->group(function () {
   Route::post('aulas/{aula}/arquivos', [AulaController::class, 'uploadArquivo']);
   Route::post('aulas/{aula}/chamada', [AulaController::class, 'registrarChamada']);
   Route::get('aulas/{aula}/chamada', [AulaController::class, 'obterChamada']);
+  Route::get('aulas/estatisticas/presenca', [AulaController::class, 'estatisticasPresenca']);
 
   // Atividades
   Route::apiResource('atividades', AtividadeController::class);

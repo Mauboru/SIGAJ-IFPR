@@ -19,6 +19,7 @@ class StoreAulaRequest extends FormRequest
             'data' => 'required|date',
             'turma_id' => 'required|exists:turmas,id',
             'materia_id' => 'required|exists:materias,id',
+            'quantidade_aulas' => 'required|integer|min:1|max:10',
         ];
     }
 }

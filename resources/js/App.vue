@@ -3,6 +3,7 @@
     <RouterView />
   </Layout>
   <RouterView v-else />
+  <Toast />
 </template>
 
 <script setup>
@@ -10,6 +11,7 @@ import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { RouterView } from 'vue-router'
 import Layout from './components/Layout.vue'
+import Toast from './components/Toast.vue'
 
 const route = useRoute()
 const showLayout = computed(() => route.meta.layout !== false)

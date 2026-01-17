@@ -126,8 +126,8 @@ class AulaController extends Controller
 
     public function registrarChamada(Request $request, Aula $aula)
     {
-        // Carregar turma para verificação
-        $aula->load('turma');
+        // Carregar turma com alunos para verificação
+        $aula->load('turma.alunos');
         
         // Apenas professor pode registrar chamada
         if (!$request->user()->isProfessor() || $aula->turma->professor_id !== $request->user()->id) {
@@ -135,23 +135,50 @@ class AulaController extends Controller
         }
 
         $request->validate([
-            'presencas' => 'required|array',
-            'presencas.*.aluno_id' => 'required|exists:users,id',
-            'presencas.*.presente' => 'required|boolean',
-            'presencas.*.observacoes' => 'nullable|string',
+            'presencas' => 'required|array|min:1',
+            'presencas.*.aluno_id' => 'required|integer|exists:users,id',
+            'presencas.*.quantidade_faltas' => 'required|integer|min:0',
+            'presencas.*.observacoes' => 'nullable|string|max:500',
         ]);
 
+        // Verificar se os alunos pertencem à turma da aula
+        $alunoIds = collect($request->presencas)->pluck('aluno_id')->unique();
+        $alunosNaTurma = $aula->turma->alunos->pluck('id');
+        
+        $presencasSalvas = 0;
         foreach ($request->presencas as $presencaData) {
+            $alunoId = (int) $presencaData['aluno_id'];
+            
+            // Verificar se o aluno pertence à turma
+            if (!$alunosNaTurma->contains($alunoId)) {
+                continue; // Pular alunos que não pertencem à turma
+            }
+            
+            $quantidadeFaltas = isset($presencaData['quantidade_faltas']) 
+                ? (int) $presencaData['quantidade_faltas'] 
+                : 0;
+            
+            // Garantir que quantidade_faltas não seja maior que quantidade_aulas da aula
+            $quantidadeFaltas = min($quantidadeFaltas, $aula->quantidade_aulas ?? 1);
+            
             Presenca::updateOrCreate(
                 [
                     'aula_id' => $aula->id,
-                    'aluno_id' => $presencaData['aluno_id'],
+                    'aluno_id' => $alunoId,
                 ],
                 [
-                    'presente' => $presencaData['presente'],
-                    'observacoes' => $presencaData['observacoes'] ?? null,
+                    'quantidade_faltas' => $quantidadeFaltas,
+                    'presente' => $quantidadeFaltas === 0, // Presente se não tiver faltas
+                    'observacoes' => !empty($presencaData['observacoes']) ? $presencaData['observacoes'] : null,
                 ]
             );
+            $presencasSalvas++;
+        }
+
+        if ($presencasSalvas === 0) {
+            return response()->json([
+                'message' => 'Nenhuma presença válida foi salva. Verifique se os alunos pertencem à turma.',
+            ], 422);
         }
 
         return response()->json([
@@ -177,6 +204,66 @@ class AulaController extends Controller
         }
 
         return response()->json($aula->presencas()->with('aluno')->get());
+    }
+
+    public function estatisticasPresenca(Request $request)
+    {
+        // Apenas alunos podem ver suas próprias estatísticas
+        if ($request->user()->isProfessor()) {
+            return response()->json(['message' => 'Não autorizado'], 403);
+        }
+
+        $alunoId = $request->user()->id;
+
+        // Buscar todas as aulas das turmas do aluno
+        $turmaIds = \App\Models\Turma::whereHas('alunos', function ($q) use ($alunoId) {
+            $q->where('aluno_id', $alunoId);
+        })->pluck('id');
+
+        $aulas = Aula::whereIn('turma_id', $turmaIds)
+            ->with(['presencas' => function ($q) use ($alunoId) {
+                $q->where('aluno_id', $alunoId);
+            }, 'materia', 'turma'])
+            ->orderBy('data', 'asc')
+            ->get();
+
+        $totalAulas = 0;
+        $totalFaltas = 0;
+        $presencasDetalhadas = [];
+
+        foreach ($aulas as $aula) {
+            $quantidadeAulas = $aula->quantidade_aulas ?? 1;
+            $totalAulas += $quantidadeAulas;
+
+            $presenca = $aula->presencas->first();
+            $quantidadeFaltas = $presenca ? ($presenca->quantidade_faltas ?? 0) : 0;
+            $totalFaltas += $quantidadeFaltas;
+
+            $presencasDetalhadas[] = [
+                'aula_id' => $aula->id,
+                'titulo' => $aula->titulo,
+                'data' => $aula->data,
+                'materia' => $aula->materia->nome ?? 'N/A',
+                'turma' => $aula->turma->nome ?? 'N/A',
+                'quantidade_aulas' => $quantidadeAulas,
+                'quantidade_faltas' => $quantidadeFaltas,
+                'quantidade_presencas' => $quantidadeAulas - $quantidadeFaltas,
+                'observacoes' => $presenca->observacoes ?? null,
+            ];
+        }
+
+        $totalPresencas = $totalAulas - $totalFaltas;
+        $percentualPresenca = $totalAulas > 0 ? round(($totalPresencas / $totalAulas) * 100, 2) : 0;
+        $percentualFalta = $totalAulas > 0 ? round(($totalFaltas / $totalAulas) * 100, 2) : 0;
+
+        return response()->json([
+            'total_aulas' => $totalAulas,
+            'total_presencas' => $totalPresencas,
+            'total_faltas' => $totalFaltas,
+            'percentual_presenca' => $percentualPresenca,
+            'percentual_falta' => $percentualFalta,
+            'presencas_detalhadas' => $presencasDetalhadas,
+        ]);
     }
 }
 

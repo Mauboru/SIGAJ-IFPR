@@ -13,11 +13,13 @@ class Presenca extends Model
         'aula_id',
         'aluno_id',
         'presente',
+        'quantidade_faltas',
         'observacoes',
     ];
 
     protected $casts = [
         'presente' => 'boolean',
+        'quantidade_faltas' => 'integer',
     ];
 
     // Relacionamentos
